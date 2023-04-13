@@ -130,5 +130,7 @@ function executar3(btn){
   });
 })();
 
-const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+document.getElementById('instancia1').value = "let alvo = document.getElementById('alvo');\nlet lg = new GradienteTransicao(alvo);\nlg.inicio = 'linear-gradient(45deg, rgba(144,98,61,0) 0%, rgba(235,141,73,0) 100%)';\nlg.final = 'linear-gradient(45deg, rgba(235,141,73,1) 0%, rgba(144,98,61,1) 100%)';\nlg.tipoDeRotacao = 'ease';\nlg.idaEVolta = true;\nlg.ehUmLoop = false;\nlg.executar();\nlg.interruptor = true;"
+
+const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
