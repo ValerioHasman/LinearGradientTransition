@@ -1,17 +1,30 @@
+/**
+ * Uma classe JavaScript  que possibilita fazer transição em gradiente uma vez que o CSS não consegue fazer com transition e linear-gradient.
+ *
+ * @author Valério Luz Hasman Junior
+ * @version 2.0.0
+ */
 class GradienteTransicao {
-  #alvo = Object();
+
+  /**
+   * @type {Element}
+   */
+  #alvo;
   #inicio = String();
   #final = String();
+  #segundos = Number(4);
+  #eventTarget = new EventTarget();
   #tipoDeRotacao = String();
   #intermedio = Array();
-  #iteravel = Array();
-  #fracao = Number();
+  #funcao = null;
   #desacelera = Number();
   #iteracao = Number(500);
-  #ehUmLoop = false;
-  #interruptor = false;
-  #rodando = false;
-  #idaEVolta = false;
+  #ehUmLoop = Boolean(false) ;
+  #interruptor = Boolean(false);
+  #rodando = Boolean(false);
+  #idaEVolta = Boolean(false);
+  #esperaDeExecucao = Boolean(false);
+  #porcentagemTempo = 1;
 
   constructor(alvo = this.alvo, inicio = this.inicio, final = this.final){
     this.alvo = alvo;
@@ -20,42 +33,66 @@ class GradienteTransicao {
   }
 
   set inicio(valor){
-    this.interruptor = true;
     this.#inicio = String(valor);
   }
   set final(valor){
-    this.interruptor = true;
     this.#final = String(valor);
   }
   set alvo(valor){
-    this.#alvo = valor;
+    if(valor instanceof Element){
+      this.#alvo = valor;
+    } else {
+      throw new TypeError('alvo deve ser uma instância de Element');
+    }
   }
-  set intervalo(valor = 500){
-    this.#interruptor = true;
-    this.#fracao = Number((1 / Number(valor)).toFixed(13));
-    this.#iteracao = Number(valor);
+  set segundos(valor){
+    this.#segundos = Number(valor);
   }
   set ehUmLoop(valor){
-    this.#ehUmLoop = (valor == true);
-  }
-  set interruptor(valor){
-    this.#rodando = false;
-    this.#interruptor = (valor == true);
+    if(this.#idaEVolta){
+      console.warn('"ehUmLoop" não pode rodar porque "idaEVolta" está ligado.');
+    } else {
+      this.#ehUmLoop = Boolean(valor);
+      if(this.#ehUmLoop){
+        this.#eventTarget.addEventListener('finalizado', this.#executarLoop);
+      } else {
+        this.#eventTarget.removeEventListener('finalizado', this.#executarLoop);
+      }
+    }
   }
   set idaEVolta(valor){
-    this.#idaEVolta = (valor == true);
+    if(this.#ehUmLoop){
+      console.warn('"idaEVolta" não pode rodar porque "ehUmLoop" está ligado.');
+    } else {
+      this.#idaEVolta = Boolean(valor);
+      if(this.#idaEVolta){
+        this.#eventTarget.addEventListener('finalizado', this.#executaridaEVolta);
+      } else {
+        this.#eventTarget.removeEventListener('finalizado', this.#executaridaEVolta);
+      }
+    }
+  }
+  set interruptor(valor){
+    this.#interruptor = Boolean(valor);
   }
   set tipoDeRotacao(valor){
     this.#tipoDeRotacao = String(valor);
   }
+
   get inicio(){
     return this.#inicio;
   }
   get final(){
     return this.#final;
   }
+  get intermedio(){
+    return this.#intermedio;
+  }
   get alvo(){
     return this.#alvo;
+  }
+  get segundos(){
+    return this.#segundos;
   }
   get intervalo(){
     return this.#iteracao;
@@ -79,54 +116,93 @@ class GradienteTransicao {
     return this.recomporLG(this.#intermedio);
   }
 
-  static aguardar(ms = 1) {
+  static aguardar(ms = 0) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  desaceleracao(i = 0){
-    let metade = this.#iteracao/2;
-    switch (this.tipoDeRotacao) {
-      case 'ease':
-        return (i < metade ? this.#desacelera-- : i > this.#iteracao - metade ? ++this.#desacelera : 0)/30;
-      case 'easeIn':
-        return (i < metade ? this.#desacelera-- : 0)/30;
-      case 'easeOut':
-        return (i < metade ? 0 : ++this.#desacelera)/30;
-      default:
-        return 1;
+  #executaridaEVolta = ()=>{
+    const troca = this.#final;
+    this.#final = this.#inicio;
+    this.#inicio = troca;
+    this.executar();
+  }
+
+  #executarLoop = ()=>{
+    this.executar();
+  }
+
+  #executarDaFila = ()=>{
+    this.#esperaDeExecucao = false;
+    this.executar();
+    this.#eventTarget.removeEventListener('finalizado', this.#executarDaFila);
+  }
+
+  executar(){
+    if(!this.#rodando){
+      this.#rodando = true;
+      this.#interruptor = false;
+      this.mudaCor();
+    } else if(!this.#esperaDeExecucao) {
+      this.#esperaDeExecucao = true;
+      this.#eventTarget.addEventListener('finalizado', this.#executarDaFila);
+    } else {
     }
   }
 
-  async pintar() {
-    let volta = false;
-    this.#desacelera = this.#iteracao/2;
-    do{
-      if(!this.idaEVolta){
-        volta = false;
-        this.#intermedio = this.decomporLG(this.inicio);
-      }
-      for (let i = 0; i <= this.#iteracao && !this.interruptor; i++) {
-        this.alvo.style.background = this.recomporLG(this.#intermedio);
-        this.#intermedio.forEach((valor, index) => {
-          valor.forEach((valSub, indSub)=>{
-            if(volta){
-              this.#intermedio[index][indSub] = Number((this.#intermedio[index][indSub] + (this.#iteravel[index][indSub][1] ?
-                                                                                          -this.#iteravel[index][indSub][0] :
-                                                                                          +this.#iteravel[index][indSub][0])).toFixed(13));
-            } else {
-              this.#intermedio[index][indSub] = Number((this.#intermedio[index][indSub] + (this.#iteravel[index][indSub][1] ?
-                                                                                          +this.#iteravel[index][indSub][0] :
-                                                                                          -this.#iteravel[index][indSub][0])).toFixed(13));
-            }
-          });
+  async mudaCor(){
+    const milesegundos = this.#segundos * 1000 * this.#porcentagemTempo;
+    const comecoMilesegundos = new Date().getTime();
+    const inicio = this.decomporLG(this.#inicio);
+    const final = this.decomporLG(this.#final);
+    this.#intermedio = GradienteTransicao.clonarVetor(inicio);
+
+    for(let intervaloTempo = 0 ; intervaloTempo <= milesegundos && !this.interruptor; intervaloTempo = new Date().getTime() - comecoMilesegundos){
+
+      const porcentagemTempo = this.corrigirImprecisao( intervaloTempo / milesegundos );
+
+      this.#porcentagemTempo = porcentagemTempo;
+
+      this.alvo.style.background = this.recomporLG(this.#intermedio);
+
+      this.#intermedio.forEach((valor, index) => {
+        valor.forEach((valSub, indSub)=>{
+
+          const numeroInicial = Number(inicio[index][indSub]);
+          const numeroFinal = Number(final[index][indSub]);
+
+          let novoValor = 0;
+          let intervalo = 0;
+
+          if(numeroInicial > numeroFinal){
+            intervalo = numeroInicial - numeroFinal;
+            novoValor = this.corrigirImprecisao(numeroInicial - intervalo * porcentagemTempo);
+          } else {
+            intervalo = numeroFinal - numeroInicial;
+            novoValor = this.corrigirImprecisao(numeroInicial + intervalo * porcentagemTempo);
+          }
+          this.#intermedio[index][indSub] = novoValor;
+
         });
-        await GradienteTransicao.aguardar(this.desaceleracao(i));
+      });
+      if(!this.#interruptor){
+        await GradienteTransicao.aguardar();
       }
-      if(this.ehUmLoop){
-        volta = !volta;
-      }
-    } while (this.ehUmLoop && !this.interruptor);
+    }
     this.#rodando = false;
+    if(!this.#interruptor){
+      this.#intermedio = [];
+      this.#porcentagemTempo = 1;
+      this.alvo.style.background = this.#final;
+    }
+    this.#eventTarget.dispatchEvent(new Event('finalizado'));
+  }
+
+  /**
+   * @param {!number} numero
+   * @returns {!number}
+   */
+  corrigirImprecisao(numero = 0){
+    return Number((numero).toFixed(13));
   }
 
   decomporLG(str){
@@ -173,68 +249,44 @@ class GradienteTransicao {
     return lg;
   }
 
-  executar(intervalo = this.intervalo){
-    if(!this.#rodando){
-      this.intervalo = intervalo;
-      this.interruptor = false;
-      this.#rodando = true;
-      let inicioArr = this.decomporLG(this.inicio);
-      let finalArr = this.decomporLG(this.final);
-      this.#intermedio = inicioArr;
-      this.valorIteravelParalelo(inicioArr, finalArr);
-      this.pintar();
-    }
-  }
-
-  valorIteravelParalelo(arr1, arr2){
-
-    this.#iteravel = [];
-
-    arr1.forEach((arrSub, index) => {
-      arrSub.forEach((valor, indSub)=>{
-
-        if(this.#iteravel[index] == undefined){
-          this.#iteravel[index] = [];
-        }
-
-        this.#iteravel[index][indSub] = this.fimMaior(arr1[index][indSub], arr2[index][indSub]);
-
-      });
+  static clonarVetor(vetor = []) {
+    const novoVetor = Array();
+    vetor.forEach((dado) => {
+      if(Array.isArray(dado)){
+        novoVetor.push( GradienteTransicao.clonarVetor(dado) );
+      } else {
+        novoVetor.push(dado);
+      }
     });
+    return novoVetor;
   }
   
-  fimMaior(ini, fim){
-    if(ini > fim){
-      return [(ini-fim) * this.#fracao, false];
-    }
-    if(ini <= fim){
-      return [(fim-ini) * this.#fracao, true];
+  esperarDeRodar(funcao = Function()){
+    if(typeof funcao === typeof Function() ){
+      this.#funcao = funcao;
+      this.#eventTarget.addEventListener('finalizado', this.#rodaDaEspera);
+    } else {
+      throw new TypeError('funcao deve ser uma função.');
     }
   }
 
-  async esperarDeRodar(funcao = function(){}){
-    this.ehUmLoop = false;
-    if(this.rodando){
-      while(this.rodando && !this.interruptor){
-        await GradienteTransicao.aguardar(1);
-      }
-      if(!this.interruptor){
-        funcao();
-      }
-    }
+  #rodaDaEspera = (funcao = Function()) => {
+    this.#funcao();
+    //this.#eventTarget.removeEventListener('finalizado', this.#rodaDaEspera);
   }
-  
+
   toString(){
     return JSON.stringify(
       {
         alvo: this.alvo.id,
         inicio: this.inicio,
+        intermedio: this.recomporLG(this.#intermedio),
         final: this.final,
-        intervalo: this.intervalo,
+        segundos: this.#segundos,
         ehUmLoop: this.ehUmLoop,
         interruptor: this.interruptor,
         idaEVolta: this.idaEVolta,
-        rodando: this.rodando,
+        rodando: this.#rodando,
         tipoDeRotacao: this.tipoDeRotacao,
       },
       0,
