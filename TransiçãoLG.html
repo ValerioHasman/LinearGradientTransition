@@ -98,44 +98,105 @@
 
 
     <div>
-      <p>Uma classe JavaScript <i class="bi bi-filetype-js"></i> que possibilita fazer transição em gradiente uma vez que o CSS não consegue fazer com <code>transition</code> e <code>linear-gradient</code>.</p>
-      <h2 class="mt-5">Usabilidade</h2>
+      <p>Uma classe JavaScript <i class="bi bi-filetype-js"></i> que possibilita fazer transição em gradiente uma vez que o CSS não consegue fazer com transition e linear-gradient.</p>
+      <h2 class="mt-5">Usabilidade e demosntração</h2>
       <p>Podendo ter sua aplicação em qualquer lugar no DOM.</p>
       <div class="row justify-content-between">
         <div class="col-12 col-md-6 col-lg-4">
-          <button type="button" onclick="executar1(this)" class="btn btn-secondary bg-gradient my-2">Executar demosntração <i class="bi bi-play"></i></button>
+          <button type="button" id="btnPrimeiroInicializa" class="btn btn-secondary bg-gradient my-2"><i class="bi bi-play"></i></button>
+          <button type="button" id="btnPrimeiroFinaliza" class="btn btn-secondary bg-gradient my-2" disabled><i class="bi bi-pause"></i></button>
+          Usando esperarDeRodar()
           <div id="primeiro" class="rounded border border-secondary quadrado"></div>
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-          <button type="button" onclick="executar2(this)" class="btn btn-secondary bg-gradient my-2">Executar demosntração <i class="bi bi-play"></i></button>
+          <button type="button" id="btnSegundoInicializa" class="btn btn-secondary bg-gradient my-2"><i class="bi bi-play"></i></button>
+          <button type="button" id="btnSegundoFinaliza" class="btn btn-secondary bg-gradient my-2" disabled><i class="bi bi-pause"></i></button>
+          Usando idaEVolta
           <div id="segundo" class="rounded border border-secondary quadrado"></div>
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-          <button type="button" onclick="executar3(this)" class="btn btn-secondary bg-gradient my-2">Executar demosntração <i class="bi bi-play"></i></button>
+          <button type="button" id="btnTerceiroInicializa" class="btn btn-secondary bg-gradient my-2"><i class="bi bi-play"></i></button>
+          <button type="button" id="btnTerceiroFinaliza" class="btn btn-secondary bg-gradient my-2" disabled><i class="bi bi-pause"></i></button>
+          Usando ehUmLoop
           <div id="terceiro" class="rounded border border-secondary quadrado"></div>
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-          <button type="button" class="btn btn-secondary bg-gradient my-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Passe o mouse por cima!">Executar demosntração <i class="bi bi-play"></i></button>
+          <button type="button" class="btn btn-secondary bg-gradient my-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Passe o mouse por cima!"><i class="bi bi-cursor"></i></button>
           <div id="hoverDiv1" class="rounded border border-secondary quadrado"></div>
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-          <button type="button" class="btn btn-secondary bg-gradient my-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Passe o mouse por cima!">Executar demosntração <i class="bi bi-play"></i></button>
+          <button type="button" class="btn btn-secondary bg-gradient my-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Passe o mouse por cima!"><i class="bi bi-cursor"></i></button>
           <div id="hoverDiv2" class="rounded border border-secondary quadrado"></div>
         </div>
         <div class="col-12 col-md-6 col-lg-4">
-          <button type="button" class="btn btn-secondary bg-gradient my-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Passe o mouse por cima!">Executar demosntração <i class="bi bi-play"></i></button>
+          <button type="button" class="btn btn-secondary bg-gradient my-2" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Passe o mouse por cima!"><i class="bi bi-cursor"></i></button>
           <div id="hoverDiv3" class="rounded border border-secondary quadrado"></div>
         </div>
       </div>
       <h2 class="mt-5">Instanciando o objeto</h2>
       <p>A seguir temos um exemplo de instância do objeto por completo. Para a instância do objeto é apenas obrigatório dar valor ao “alvo”, ao “inicio” e ao “final”, e para que aconteça a execução o método “executar” deve ser acionado.</p>
-      <textarea class="form-control scripts" id="instancia1" readonly spellcheck="false" rows="9"></textarea>
-      <h2 class="mt-5">Valores aceitos</h2>
-      <p>“idaEVolta” diz se ele é para ir e voltar do “inicio” ao “final” do “final” ao “inicio”.</p>
-      <p>“ehUmLoop” diz se ele deve começar de novo sucessivamente.</p>
-      <p>“interruptor” interrompe a execução.</p>
-      <p>”tipoDeRotacao” aceita 'ease', ‘easeIn’, ‘easeOut’ e ''.</p>
-      <p>“esperarDeRodar()” espera que passe uma função por parâmetro até o que a animação pare para assim executar tua função passada por parâmetro. Obs.: “ehUmLoop” tem que ser false, caso contrário a função passada por parâmetro não será executada.</p>
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th scope="col">Atributo</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Valor de exemplo</th>
+              <th scope="col">Descrição</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="font-monospace" scope="row">inicio</th>
+              <td class="font-monospace">string</td>
+              <td class="font-monospace">linear-gradient(45deg, rgba(144,98,61,0) 0%, rgba(235,141,73,0) 100%)</td>
+              <td>Começo do gradiente, necessita da string completa.</td>
+            </tr>
+            <tr>
+              <th class="font-monospace" scope="row">final</th>
+              <td class="font-monospace">string</td>
+              <td class="font-monospace">linear-gradient(276deg, rgba(235,141,73,1) 0%, rgba(144,98,61,1) 100%)</td>
+              <td>Define o fim do gradiente, necessita da string completa.</td>
+            </tr>
+            <tr>
+              <th class="font-monospace" scope="row">segundos</th>
+              <td class="font-monospace">number</td>
+              <td class="font-monospace">4</td>
+              <td>Determina o tempo de transição da animação.</td>
+            </tr>
+            <tr>
+              <th class="font-monospace" scope="row">idaEVolta</th>
+              <td class="font-monospace">boolean</td>
+              <td class="font-monospace">false</td>
+              <td>Faz com que ao terminar a animação ele possa executar uma nova animação começando pelo fim e terminando no começo repetitivamente.</td>
+            </tr>
+            <tr>
+              <th class="font-monospace" scope="row">ehUmLoop</th>
+              <td class="font-monospace">boolean</td>
+              <td class="font-monospace">false</td>
+              <td>Faz com que ao terminar a animação execute desde o começo repetitivamente.</td>
+            </tr>
+            <tr>
+              <th class="font-monospace" scope="row">interruptor</th>
+              <td class="font-monospace">boolean</td>
+              <td class="font-monospace">false</td>
+              <td>Finalize a animação imediatamente.</td>
+            </tr>
+            <tr>
+              <th class="font-monospace" scope="row">executar()</th>
+              <td class="font-monospace">function</td>
+              <td class="font-monospace"></td>
+              <td>Método que inicializa o processo de transição.</td>
+            </tr>
+            <tr>
+              <th class="font-monospace" scope="row">esperarDeRodar()</th>
+              <td class="font-monospace">function</td>
+              <td class="font-monospace">function</td>
+              <td>Método que esperar de rodar onde um evento de finalização é acionado.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     <div class="my-5 py-5"></div>
   </div>
 

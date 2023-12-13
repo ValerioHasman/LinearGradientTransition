@@ -15,10 +15,8 @@ class GradienteTransicao {
   #segundos = Number(4);
   #eventTarget = new EventTarget();
   #tipoDeRotacao = String();
-  #intermedio = Array();
+  #ondeParou = Array();
   #funcao = null;
-  #desacelera = Number();
-  #iteracao = Number(500);
   #ehUmLoop = Boolean(false) ;
   #interruptor = Boolean(false);
   #rodando = Boolean(false);
@@ -86,16 +84,13 @@ class GradienteTransicao {
     return this.#final;
   }
   get intermedio(){
-    return this.#intermedio;
+    return this.#ondeParou;
   }
   get alvo(){
     return this.#alvo;
   }
   get segundos(){
     return this.#segundos;
-  }
-  get intervalo(){
-    return this.#iteracao;
   }
   get ehUmLoop(){
     return this.#ehUmLoop;
@@ -113,22 +108,25 @@ class GradienteTransicao {
     return this.#tipoDeRotacao;
   }
   get ondeParou(){
-    return this.recomporLG(this.#intermedio);
+    return GradienteTransicao.recomporLG(this.#ondeParou);
   }
 
   static aguardar(ms = 0) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
-
   #executaridaEVolta = ()=>{
-    const troca = this.#final;
-    this.#final = this.#inicio;
-    this.#inicio = troca;
-    this.executar();
+    if(!this.#interruptor){
+      const troca = this.#final;
+      this.#final = this.#inicio;
+      this.#inicio = troca;
+      this.executar();
+    }
   }
 
   #executarLoop = ()=>{
-    this.executar();
+    if(!this.#interruptor){
+      this.executar();
+    }
   }
 
   #executarDaFila = ()=>{
@@ -146,15 +144,26 @@ class GradienteTransicao {
       this.#esperaDeExecucao = true;
       this.#eventTarget.addEventListener('finalizado', this.#executarDaFila);
     } else {
+      // fila lotada
     }
   }
 
   async mudaCor(){
-    const milesegundos = this.#segundos * 1000 * this.#porcentagemTempo;
+
+    let milesegundos;
+    let inicio;
     const comecoMilesegundos = new Date().getTime();
-    const inicio = this.decomporLG(this.#inicio);
-    const final = this.decomporLG(this.#final);
-    this.#intermedio = GradienteTransicao.clonarVetor(inicio);
+
+    if(this.#porcentagemTempo < 1 && ( this.#idaEVolta ^ this.#ehUmLoop )){
+      inicio = this.#ondeParou;
+      milesegundos = this.#segundos * 1000 * (1 - this.#porcentagemTempo);
+    } else {
+      inicio = GradienteTransicao.decomporLG(this.#inicio);
+      milesegundos = this.#segundos * 1000 * this.#porcentagemTempo;
+    }
+
+    const final = GradienteTransicao.decomporLG(this.#final);
+    this.#ondeParou = GradienteTransicao.clonarVetor(inicio);
 
     for(let intervaloTempo = 0 ; intervaloTempo <= milesegundos && !this.interruptor; intervaloTempo = new Date().getTime() - comecoMilesegundos){
 
@@ -162,9 +171,9 @@ class GradienteTransicao {
 
       this.#porcentagemTempo = porcentagemTempo;
 
-      this.alvo.style.background = this.recomporLG(this.#intermedio);
+      this.alvo.style.background = GradienteTransicao.recomporLG(this.#ondeParou);
 
-      this.#intermedio.forEach((valor, index) => {
+      this.#ondeParou.forEach((valor, index) => {
         valor.forEach((valSub, indSub)=>{
 
           const numeroInicial = Number(inicio[index][indSub]);
@@ -180,7 +189,7 @@ class GradienteTransicao {
             intervalo = numeroFinal - numeroInicial;
             novoValor = this.corrigirImprecisao(numeroInicial + intervalo * porcentagemTempo);
           }
-          this.#intermedio[index][indSub] = novoValor;
+          this.#ondeParou[index][indSub] = novoValor;
 
         });
       });
@@ -190,7 +199,7 @@ class GradienteTransicao {
     }
     this.#rodando = false;
     if(!this.#interruptor){
-      this.#intermedio = [];
+      this.#ondeParou = [];
       this.#porcentagemTempo = 1;
       this.alvo.style.background = this.#final;
     }
@@ -205,7 +214,7 @@ class GradienteTransicao {
     return Number((numero).toFixed(13));
   }
 
-  decomporLG(str){
+  static decomporLG(str){
     str = str.substring(str.indexOf('(') + 1, str.lastIndexOf(')'));
     let arr = str.split( /,(?![^(]*\))(?![^"']*["'](?:[^"']*["'][^"']*["'])*[^"']*$)/ ) ;
     let valores = [];
@@ -230,7 +239,7 @@ class GradienteTransicao {
     return valores;
   }
 
-  recomporLG(array){
+  static recomporLG(array){
     let lg = ``;
 
     array.forEach((subArr, index)=>{
@@ -249,6 +258,10 @@ class GradienteTransicao {
     return lg;
   }
 
+ //interruptor(){
+ //  return interruptor;
+ //}
+
   static clonarVetor(vetor = []) {
     const novoVetor = Array();
     vetor.forEach((dado) => {
@@ -263,7 +276,13 @@ class GradienteTransicao {
   
   esperarDeRodar(funcao = Function()){
     if(typeof funcao === typeof Function() ){
-      this.#funcao = funcao;
+      this.#funcao = ()=>{
+        if(this.#interruptor){
+          this.#porcentagemTempo = 1;
+        } else {
+          funcao();
+        }
+      };
       this.#eventTarget.addEventListener('finalizado', this.#rodaDaEspera);
     } else {
       throw new TypeError('funcao deve ser uma função.');
@@ -280,7 +299,7 @@ class GradienteTransicao {
       {
         alvo: this.alvo.id,
         inicio: this.inicio,
-        intermedio: this.recomporLG(this.#intermedio),
+        intermedio: GradienteTransicao.recomporLG(this.#ondeParou),
         final: this.final,
         segundos: this.#segundos,
         ehUmLoop: this.ehUmLoop,
